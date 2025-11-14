@@ -1,0 +1,8 @@
+{
+  "name": "Web2APK Studio",
+  "description": "A user-friendly tool to convert web applications into native Android apps. Configure metadata, select native features, and generate a signed APK or AAB ready for the Google Play Store.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ]
+}
