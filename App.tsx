@@ -6,7 +6,9 @@ import PhonePreview from './components/PhonePreview';
 import { UploadIcon, LinkIcon, CodeIcon, CheckIcon, QrCodeIcon, DownloadIcon } from './components/icons';
 
 const initialConfig: AppConfig = {
+  sourceType: 'url',
   url: '',
+  zipFile: null,
   appName: '',
   icon: null,
   themeColor: '#6366f1',
@@ -37,12 +39,12 @@ const Section: React.FC<{title: string; children: React.ReactNode}> = ({ title, 
     </div>
 );
 
-const InputField: React.FC<{label: string; id: string; value: string; onChange: (e: ChangeEvent<HTMLInputElement>) => void; placeholder?: string; type?: string; icon?: React.ReactNode}> = ({ label, id, value, onChange, placeholder, type = 'text', icon }) => (
+const InputField: React.FC<{label: string; id: string; name?: string; value: string; onChange: (e: ChangeEvent<HTMLInputElement>) => void; placeholder?: string; type?: string; icon?: React.ReactNode}> = ({ label, id, name, value, onChange, placeholder, type = 'text', icon }) => (
     <div>
         <label htmlFor={id} className="block text-sm font-medium text-gray-300 mb-1">{label}</label>
         <div className="relative">
             {icon && <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">{icon}</div>}
-            <input type={type} id={id} name={id} value={value} onChange={onChange} placeholder={placeholder} className={`block w-full bg-gray-900/50 border-gray-600 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 ${icon ? 'pl-10' : 'px-3'}`} />
+            <input type={type} id={id} name={name || id} value={value} onChange={onChange} placeholder={placeholder} className={`block w-full bg-gray-900/50 border-gray-600 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 ${icon ? 'pl-10' : 'px-3'}`} />
         </div>
     </div>
 );
@@ -102,19 +104,68 @@ const ConfigureStep: React.FC<{ config: AppConfig; setConfig: React.Dispatch<Rea
       }
     };
 
+    const handleZipChange = (e: ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setConfig(prev => ({ ...prev, zipFile: e.target.files![0] }));
+        }
+    };
+
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
                 <Section title="1. App Source">
-                    <InputField 
-                        label="Web App URL" 
-                        id="url" 
-                        name="url" 
-                        value={config.url} 
-                        onChange={handleInputChange} 
-                        placeholder="https://your-pwa.com" 
-                        icon={<LinkIcon className="h-5 w-5 text-gray-400" />} 
-                    />
+                    <div className="flex space-x-2 mb-6 bg-gray-900/50 p-1 rounded-lg">
+                         <button 
+                            onClick={() => setConfig(prev => ({...prev, sourceType: 'url'}))}
+                            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${config.sourceType === 'url' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:text-white'}`}
+                         >
+                            Web URL
+                         </button>
+                         <button 
+                            onClick={() => setConfig(prev => ({...prev, sourceType: 'zip'}))}
+                            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${config.sourceType === 'zip' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:text-white'}`}
+                         >
+                            Zip Bundle
+                         </button>
+                    </div>
+
+                    {config.sourceType === 'url' ? (
+                        <InputField 
+                            label="Web App URL" 
+                            id="url" 
+                            name="url" 
+                            value={config.url} 
+                            onChange={handleInputChange} 
+                            placeholder="https://your-pwa.com" 
+                            icon={<LinkIcon className="h-5 w-5 text-gray-400" />} 
+                        />
+                    ) : (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-1">Upload App Bundle (.zip)</label>
+                            <div className="relative mt-1 flex justify-center items-center px-6 pt-5 pb-6 border-2 border-gray-600 border-dashed rounded-md hover:border-indigo-500 transition-colors bg-gray-900/30 group cursor-pointer">
+                                 <input 
+                                    type="file" 
+                                    id="zip-upload" 
+                                    accept=".zip,application/zip" 
+                                    onChange={handleZipChange} 
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                 />
+                                 <div className="space-y-1 text-center">
+                                    <UploadIcon className={`mx-auto h-12 w-12 ${config.zipFile ? 'text-indigo-500' : 'text-gray-400'} group-hover:text-indigo-400 transition-colors`} />
+                                    <div className="text-sm text-gray-300">
+                                        {config.zipFile ? (
+                                            <span className="font-medium text-indigo-400">{config.zipFile.name}</span>
+                                        ) : (
+                                            <p>
+                                                <span className="font-medium text-indigo-400">Click to upload</span> or drag and drop
+                                            </p>
+                                        )}
+                                    </div>
+                                    <p className="text-xs text-gray-500 mt-2">Containing index.html at root</p>
+                                 </div>
+                            </div>
+                        </div>
+                    )}
                 </Section>
                 <Section title="2. App Metadata">
                     <div className="space-y-4">
@@ -185,13 +236,13 @@ const BuildStep: React.FC<{ config: AppConfig; setConfig: React.Dispatch<React.S
 
     const buildSteps = useMemo(() => [
         { name: "Validating configuration...", duration: 1500 },
-        { name: "Fetching web assets...", duration: 2000 },
+        { name: config.sourceType === 'url' ? "Fetching web assets..." : "Extracting zip bundle...", duration: 2000 },
         { name: "Wrapping with native shell...", duration: 2500 },
         { name: "Compiling Android resources...", duration: 3000 },
         { name: `Signing ${config.buildFormat.toUpperCase()} package...`, duration: 2000 },
         { name: "Finalizing build...", duration: 1000 },
         { name: "Build complete!", duration: 500 },
-    ], [config.buildFormat]);
+    ], [config.buildFormat, config.sourceType]);
     
     const startBuild = () => {
         setIsBuilding(true);
@@ -356,7 +407,8 @@ const App: React.FC = () => {
 
   const isNextDisabled = () => {
     if (currentStep === 1) {
-        return !config.url || !config.appName || !config.packageId;
+        const isSourceValid = config.sourceType === 'url' ? !!config.url : !!config.zipFile;
+        return !isSourceValid || !config.appName || !config.packageId;
     }
     return false;
   };

@@ -32,21 +32,40 @@ const PhonePreview: React.FC<PhonePreviewProps> = ({ config }) => {
         </div>
         
         {/* Content */}
-        <div className="flex-grow bg-gray-200">
-          {isValidUrl(url) ? (
-            <iframe
-              src={url}
-              title="App Preview"
-              className="w-full h-full border-0"
-              sandbox="allow-scripts allow-same-origin"
-            />
+        <div className="flex-grow bg-gray-200 relative">
+          {config.sourceType === 'url' ? (
+            isValidUrl(url) ? (
+              <iframe
+                src={url}
+                title="App Preview"
+                className="w-full h-full border-0"
+                sandbox="allow-scripts allow-same-origin"
+              />
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center text-center bg-gray-800 p-4">
+                <svg className="w-16 h-16 text-gray-600 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9V3m-9 9h18" />
+                </svg>
+                <h3 className="font-semibold text-gray-300">App Preview</h3>
+                <p className="text-sm text-gray-500 mt-1">Enter a valid public URL to see a live preview of your web app.</p>
+              </div>
+            )
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center text-center bg-gray-800 p-4">
-              <svg className="w-16 h-16 text-gray-600 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9V3m-9 9h18" />
-              </svg>
-              <h3 className="font-semibold text-gray-300">App Preview</h3>
-              <p className="text-sm text-gray-500 mt-1">Enter a valid public URL to see a live preview of your web app.</p>
+                <div className="bg-gray-700 p-4 rounded-full mb-4">
+                    <svg className="w-8 h-8 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                    </svg>
+                </div>
+                <h3 className="font-semibold text-gray-300">Local Bundle Loaded</h3>
+                <p className="text-sm text-gray-500 mt-2 px-4">
+                    {config.zipFile ? config.zipFile.name : 'No zip file selected'}
+                </p>
+                {config.zipFile && (
+                     <span className="mt-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        Ready to Build
+                     </span>
+                )}
             </div>
           )}
         </div>

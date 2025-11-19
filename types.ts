@@ -1,6 +1,8 @@
 
 export interface AppConfig {
+  sourceType: 'url' | 'zip';
   url: string;
+  zipFile: File | null;
   appName: string;
   icon: string | null;
   themeColor: string;
